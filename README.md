@@ -1,4 +1,4 @@
-# wsvc8.0_patcher
+# msvc8.0_patcher
 
 A conglomeration of magical artifacts that patch MSVC 8.0 binaries to add pseudo-`__usercall` syntax from IDA Pro in support of the [FUELDecompilation project](https://github.com/widberg/FUELDecompilation).
 

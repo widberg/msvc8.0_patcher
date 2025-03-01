@@ -4,9 +4,15 @@ set(CMAKE_BUILD_TYPE "Release" CACHE STRING "")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "")
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION OFF CACHE BOOL "")
 
-project(msvc8.0_patcher LANGUAGES CXX C)
+project(msvc8.0_patcher VERSION 0.1.0 LANGUAGES CXX C)
 
 add_subdirectory(dependencies)
+
+set(MS_VER_MAJOR ${PROJECT_VERSION_MAJOR})
+set(MS_VER_MINOR ${PROJECT_VERSION_MINOR})
+set(MS_VER_PATCH ${PROJECT_VERSION_PATCH})
+math(EXPR MS_VER "${MS_VER_MAJOR} * 10000 + ${MS_VER_MINOR} * 100 + ${MS_VER_PATCH} * 1")
+configure_file(src/version.h.in ${CMAKE_CURRENT_BINARY_DIR}/version.h @ONLY)
 
 include(cmake/add_patched.cmake)
 
@@ -24,6 +30,7 @@ add_patched(cl_patched
         "NEAR_JUMP;_PREP_START;prep"
         "BYTE;_FIX_OVERFLOW;0x7"
 )
+target_include_directories(cl_patched_patch PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 add_patched(c1_patched
     SOURCE src/c1_patched.c

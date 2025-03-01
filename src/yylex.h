@@ -32,14 +32,14 @@ __declspec(dllexport) TOKEN *wrap_yylex(void) {
       return token;
     }
     unsigned value = peaked_token->value2;
-    if (value != VAL_USERCALL && value != VAL_USERPURGE) {
+    if (value != WS_USERCALL && value != WS_USERPURGE) {
         token->value = 0;
         return token;
     }
     TOKEN_INPUT_STACK_GET_TOKEN(&TOKEN_INPUT_STACK);
     REGS_DATA *regs_data = (REGS_DATA*)DoMalloc(sizeof(*regs_data));
 
-    regs_data->flags = value == VAL_USERCALL;
+    regs_data->flags = value == WS_USERCALL;
 
     unsigned regs_size = 0;
     while (1) {

@@ -1,3 +1,4 @@
+#include "version.h"
 #include "constants.h"
 
 #define WS_STR2(x) #x
@@ -10,8 +11,9 @@ unsigned short *defines[] = {
     L"-D__edx=" WS_STR(WS_EDX),
     L"-D__esi=" WS_STR(WS_ESI),
     L"-D__edi=" WS_STR(WS_EDI),
-    L"-D__usercall=__fastcall " WS_STR(VAL_USERCALL),
-    L"-D__userpurge=__fastcall " WS_STR(VAL_USERPURGE)
+    L"-D__usercall=__fastcall " WS_STR(WS_USERCALL),
+    L"-D__userpurge=__fastcall " WS_STR(WS_USERPURGE),
+    L"-D_WSC_VER=" WS_STR(WS_VER),
 };
 
 #undef WS_STR

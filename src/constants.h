@@ -4,12 +4,9 @@
 #define FE_CC_MASK 7
 #define FE_CC_CDECL 1
 #define FE_CC_FASTCALL 2
-#define FE_CC_THISCALL 3
+#define FE_CC_STDCALL 3
 
 #define TOK_INT 33
-
-#define VAL_USERCALL 255
-#define VAL_USERPURGE 254
 
 #define MS_EAX 1
 #define MS_EBX 4
@@ -24,6 +21,8 @@
 #define WS_EDX 3
 #define WS_ESI 4
 #define WS_EDI 5
+#define WS_USERCALL 255
+#define WS_USERPURGE 254
 
 #define REGS_DATA_FLAG_VAARGS 1
 #define REGS_DATA_MAX_REGS 6

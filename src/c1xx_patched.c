@@ -77,7 +77,7 @@ __declspec(dllexport, naked) void vaargs(void) {
         and eax, FE_CC_MASK
         cmp ax, FE_CC_CDECL
         jz VAARGS_GOOD_END
-        cmp ax, FE_CC_THISCALL
+        cmp ax, FE_CC_STDCALL
         jz VAARGS_BAD_END
         cmp ax, FE_CC_FASTCALL
         jne VAARGS_UGLY_END

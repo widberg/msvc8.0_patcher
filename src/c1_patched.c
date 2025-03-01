@@ -80,7 +80,7 @@ __declspec(dllexport, naked) void vaargs(void) {
         mov edx, eax
         mov eax, ebx
         and eax, FE_CC_MASK
-        cmp ax, FE_CC_THISCALL
+        cmp ax, FE_CC_STDCALL
         jz VAARGS_BAD_END
         cmp ax, FE_CC_FASTCALL
         jne VAARGS_UGLY_END
