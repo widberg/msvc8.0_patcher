@@ -1,0 +1,3 @@
+[submodule "dependencies/LIEF"]
+	path = dependencies/LIEF
+	url = https://github.com/lief-project/LIEF.git

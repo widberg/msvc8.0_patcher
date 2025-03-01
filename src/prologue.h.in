@@ -1,0 +1,10 @@
+// Needs to be a code segment to be placed before the .widberg section
+#pragma code_seg(".filler")
+
+__declspec(allocate(".filler")) char const __widberg_filler[@WIDBERG_FILLER@];
+
+#pragma code_seg(".widberg")
+#pragma data_seg(".widberg.data")
+#pragma const_seg(".widberg.rdata")
+
+@WIDBERG_SYMBOLS@
