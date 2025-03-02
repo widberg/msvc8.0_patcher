@@ -1,4 +1,4 @@
-#cmakedefine WS_VER_MAJOR @WS_VER_MAJOR@
-#cmakedefine WS_VER_MINOR @WS_VER_MINOR@
-#cmakedefine WS_VER_PATCH @WS_VER_PATCH@
-#cmakedefine WS_VER @WS_VER@
+#define WS_VER_MAJOR @WS_VER_MAJOR@
+#define WS_VER_MINOR @WS_VER_MINOR@
+#define WS_VER_PATCH @WS_VER_PATCH@
+#define WS_VER @WS_VER@
