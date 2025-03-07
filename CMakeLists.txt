@@ -6,6 +6,9 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION OFF CACHE BOOL "")
 
 project(msvc8.0_patcher VERSION 0.1.0 LANGUAGES CXX C)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 add_subdirectory(dependencies)
 
 set(WS_VER_MAJOR "${PROJECT_VERSION_MAJOR}")
@@ -27,7 +30,7 @@ add_patched(cl_patched
         "_DEFINE_STUFF;void DEFINE_STUFF(void);0x004051c2"
         "_FIX_OVERFLOW;void FIX_OVERFLOW(void);0x00407151;ABS"
     PATCHES
-        "NEAR_JUMP;_PREP_START;prep"
+        "NEAR_JMP;_PREP_START;prep"
         "BYTE;_FIX_OVERFLOW;0x7"
 )
 target_include_directories(cl_patched_patch PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
@@ -62,12 +65,12 @@ add_patched(c1_patched
         "___imp__malloc;void (*__imp__malloc)(unsigned);0x10A7031C;ABS"
         "_FASTCALL_TOKSTRINGS_SIZE;void TOKSTRINGS_SIZE(void);0x10a7633c;ABS"
     PATCHES
-        "NEAR_JUMP;_SAVE_EXTRA_START;save_extra"
-        "NEAR_JUMP;_PARSER_OPTYPE_START;parser_optype"
-        "NEAR_JUMP;_WRITE_EXTRA_START;write_extra"
-        "NEAR_JUMP;_ADD_FUNC_START;add_func"
-        "NEAR_JUMP;_VAARGS_START;vaargs"
-        "NEAR_JUMP;_YYLEX;wrap_yylex"
+        "NEAR_JMP;_SAVE_EXTRA_START;save_extra"
+        "NEAR_JMP;_PARSER_OPTYPE_START;parser_optype"
+        "NEAR_JMP;_WRITE_EXTRA_START;write_extra"
+        "NEAR_JMP;_ADD_FUNC_START;add_func"
+        "NEAR_JMP;_VAARGS_START;vaargs"
+        "NEAR_JMP;_YYLEX;wrap_yylex"
         "BYTE;_FASTCALL_TOKSTRINGS_SIZE;0x8"
 )
 
@@ -112,19 +115,22 @@ add_patched(c1xx_patched
         "_COMMAND_DEF;void COMMAND_DEF(void);0x1050f890"
         "_DoMalloc@4;void *__stdcall DoMalloc(unsigned);0x105AB820"
         "_FASTCALL_TOKSTRINGS_SIZE;unsigned *FASTCALL_TOKSTRINGS_SIZE;0x106c9ccc;ABS"
+        "_VALIDATE_CONSTRUCTOR_CC;void VALIDATE_CONSTRUCTOR_CC(void);0x1056D2B3"
+        "_END_VALIDATE_CONSTRUCTOR_CC;void END_VALIDATE_CONSTRUCTOR_CC(void);0x1056CF63"
     PATCHES
-        "NEAR_JUMP;_SAVE_EXTRA_START;save_extra"
-        "NEAR_JUMP;_PARSER_OPTYPE_START;parser_optype"
-        "NEAR_JUMP;_WRITE_EXTRA_START1;write_extra"
-        "NEAR_JUMP;_WRITE_EXTRA_START2;write_extra"
-        "NEAR_JUMP;_WRITE_EXTRA_START3;write_extra"
-        "NEAR_JUMP;_WRITE_EXTRA_START4;write_extra"
-        "NEAR_JUMP;_ADD_FUNC_START;add_func"
-        "NEAR_JUMP;_ADD_FUNC2_START;add_func2"
-        "NEAR_JUMP;_VAARGS_START;vaargs"
-        "NEAR_JUMP;_VAARGS2_START;vaargs2"
-        "NEAR_JUMP;_YYLEX;wrap_yylex"
+        "NEAR_JMP;_SAVE_EXTRA_START;save_extra"
+        "NEAR_JMP;_PARSER_OPTYPE_START;parser_optype"
+        "NEAR_JMP;_WRITE_EXTRA_START1;write_extra"
+        "NEAR_JMP;_WRITE_EXTRA_START2;write_extra"
+        "NEAR_JMP;_WRITE_EXTRA_START3;write_extra"
+        "NEAR_JMP;_WRITE_EXTRA_START4;write_extra"
+        "NEAR_JMP;_ADD_FUNC_START;add_func"
+        "NEAR_JMP;_ADD_FUNC2_START;add_func2"
+        "NEAR_JMP;_VAARGS_START;vaargs"
+        "NEAR_JMP;_VAARGS2_START;vaargs2"
+        "NEAR_JMP;_YYLEX;wrap_yylex"
         "BYTE;_FASTCALL_TOKSTRINGS_SIZE;0x8"
+        "NEAR_JMP;_VALIDATE_CONSTRUCTOR_CC;_END_VALIDATE_CONSTRUCTOR_CC"
 )
 
 add_patched(c2_patched
@@ -143,7 +149,7 @@ add_patched(c2_patched
         "_CALLEE_CLEAN_START;void CALLEE_CLEAN_START(void);0x10C4E81C"
         "_CALLEE_CLEAN_END;void CALLEE_CLEAN_END(void);0x10C4E823"
     PATCHES
-        "NEAR_JUMP;_START_PTR;usercall_allo_reg"
-        "NEAR_JUMP;_READ_EXTRA_START_PTR;read_extra"
-        "NEAR_JUMP;_CALLEE_CLEAN_START;callee_clean"
+        "NEAR_JMP;_START_PTR;usercall_allo_reg"
+        "NEAR_JMP;_READ_EXTRA_START_PTR;read_extra"
+        "NEAR_JMP;_CALLEE_CLEAN_START;callee_clean"
 )

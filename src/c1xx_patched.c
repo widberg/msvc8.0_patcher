@@ -85,7 +85,7 @@ __declspec(dllexport, naked) void vaargs(void) {
         test edx, edx
         jz VAARGS_BAD_END
         mov edx, DWORD PTR [edx]
-        test edx, REGS_DATA_FLAG_VAARGS
+        test edx, REGS_DATA_FLAG_CALLEECLEAN
         jz VAARGS_BAD_END
         jmp VAARGS_GOOD_END
     }
@@ -99,7 +99,7 @@ __declspec(dllexport, naked) void vaargs2(void) {
         test eax, eax
         jz VAARGS2_BAD_END
         mov eax, DWORD PTR [eax]
-        test eax, REGS_DATA_FLAG_VAARGS
+        test eax, REGS_DATA_FLAG_CALLEECLEAN
         jz VAARGS2_BAD_END
         jmp VAARGS2_GOOD_END
     }

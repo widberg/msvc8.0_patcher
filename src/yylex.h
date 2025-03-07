@@ -18,7 +18,7 @@ static const unsigned char REGS_LOOKUP[] = {
     [WS_ECX] = MS_ECX,
     [WS_EDX] = MS_EDX,
     [WS_ESI] = MS_ESI,
-    [WS_EDI] = MS_EDI
+    [WS_EDI] = MS_EDI,
 };
 
 __declspec(dllexport) TOKEN *wrap_yylex(void) {
@@ -39,7 +39,10 @@ __declspec(dllexport) TOKEN *wrap_yylex(void) {
     TOKEN_INPUT_STACK_GET_TOKEN(&TOKEN_INPUT_STACK);
     REGS_DATA *regs_data = (REGS_DATA*)DoMalloc(sizeof(*regs_data));
 
-    regs_data->flags = value == WS_USERCALL;
+    regs_data->flags = 0;
+    if (value == WS_USERCALL) {
+        regs_data->flags |= REGS_DATA_FLAG_CALLEECLEAN;
+    }
 
     unsigned regs_size = 0;
     while (1) {
@@ -48,8 +51,12 @@ __declspec(dllexport) TOKEN *wrap_yylex(void) {
         break;
       }
       unsigned value = peaked_token->value2;
-      regs_data->regs[regs_size] = REGS_LOOKUP[value];
-      regs_size++;
+      if (value == WS_MUSTUSEEBP) {
+        regs_data->flags |= REGS_DATA_FLAG_MUSTUSEEBP;
+      } else {
+        regs_data->regs[regs_size] = REGS_LOOKUP[value];
+        regs_size++;
+      }
       TOKEN_INPUT_STACK_GET_TOKEN(&TOKEN_INPUT_STACK);
       if (regs_size >= REGS_DATA_MAX_REGS) {
         break;

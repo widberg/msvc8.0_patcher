@@ -1,3 +1,5 @@
+#include "constants.h"
+
 __declspec(dllexport, naked) void usercall_allo_reg(void) {
     __asm {
         mov ecx, DWORD PTR [esp+0x18]
@@ -47,7 +49,7 @@ __declspec(dllexport, naked) void callee_clean(void) {
         test edi, edi
         jz callee_clean_skip
         mov edi, DWORD PTR [edi]
-        test edi, 1
+        test edi, REGS_DATA_FLAG_CALLEECLEAN
         jz callee_clean_skip
         mov edi, 0
         jmp CALLEE_CLEAN_END

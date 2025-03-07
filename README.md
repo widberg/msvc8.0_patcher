@@ -32,12 +32,31 @@ Clone the repository and submodules. Use a modern Visual Studio and Ninja to bui
 
 ## TODO
 
+Ordered by priority.
+
 * For some reason reg args are treated as "used" aka overwritten even if they aren't
-* figure out if the compiler ever passes floats in st regs
-  - IDA thinks so but I think its confused
+  - Only the regs not in the clobber list
+  - This is really annoying because it makes it impossible to match functions using regs other than eax, ecx, and edx for args
+  - Actual flex params are not treated as used, try to copy what those do if I can figure that out
+* Figure out if we need a way to force using base pointer as reg
+  - Sometimes the compiler uses another reg when it should be using ebp
+  - Even with /Oy- it still uses another reg
+  - This could be due to not matching instructions elsewhere in the functions due to the previous todo
+* Store the regs data out of band
+  - We're stepping on memory used by the compiler putting the pointer where we are
 * figure out if we need spoils?
   - Doesn't seem like it
-* force storing base pointer
-  - Sometimes the compiler doesn't store the base pointer so it doesn't match
+  - Looks like the clobber list is hard coded in the compiler
 * force inline/no inline per call
   - Likely unnecessary
+  - Not sure if LTCG would cause anything to be inlined that wouldn't be otherwise if available
+  - If we do need this then probably just allow forceinline and noinline keywords after a function call and tag the call
+
+## Notes
+
+* Which regs are supported for parameters
+  - IDA thinks the compiler passes floats in st regs for user code but I think its confused
+  - I don't see any evidence that the compiler is capable of using st regs for flex params. Only the 8 gprs and 8 xmm regs are used
+  - The compiler may emit calls to compiler runtime functions such as __ftol2_sse which does pass the argument in st0 but these are a special case an user code will never do this
+  - FUEL doesn't use xmm regs for params outside of library code so I won't bother supporting it
+  - FUEL also never passes arguments in EBP or ESP so I won't bother supporting it

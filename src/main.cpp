@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <vector>
 #include <string>
+#include <optional>
 
 #include <LIEF/PE.hpp>
 
@@ -20,13 +21,13 @@ std::vector<std::string> split(const std::string& str, char delimiter) {
     return parts;
 }
 
-uint32_t get_value(const std::string& name, const LIEF::PE::Binary& patch, std::unordered_map<std::string, uint32_t>& symbols_map) {
+std::optional<uint32_t> get_value(const std::string& name, const LIEF::PE::Binary& patch, std::unordered_map<std::string, uint32_t>& symbols_map) {
     size_t pos;
-    uint32_t value = 0;
+    std::optional<uint32_t> value {};
     try {
         value = std::stoul(name, &pos, 16);
         if (pos != name.size()) {
-            value = 0;
+            value = {};
         }
     } catch (std::exception) {
     }
@@ -112,11 +113,12 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        auto value = get_value(parts[1], *patch, symbols_map);
-        if (!value) {
+        auto optional_value = get_value(parts[1], *patch, symbols_map);
+        if (!optional_value) {
             std::cerr << "Invalid symbol value: " << line << std::endl;
             return 1;
         }
+        auto value = *optional_value;
         symbols_map[parts[0]] = value;
     }
 
@@ -134,27 +136,29 @@ int main(int argc, char *argv[]) {
         }
 
         auto type = parts[0];
-        auto address = get_value(parts[1], *patch, symbols_map);
-        if (!address) {
+        auto optional_address = get_value(parts[1], *patch, symbols_map);
+        if (!optional_address) {
             std::cerr << "Invalid address: " << line << std::endl;
             return 1;
         }
-        auto value = get_value(parts[2], *patch, symbols_map);
-        if (!value) {
+        auto address = *optional_address;
+        auto optional_value = get_value(parts[2], *patch, symbols_map);
+        if (!optional_value) {
             std::cerr << "Invalid value: " << line << std::endl;
             return 1;
         }
+        auto value = *optional_value;
 
-        if (type == "NEAR_JUMP") {
+        if (type == "NEAR_JMP") {
             data.resize(5);
             data[0] = 0xE9;
             *(int32_t *)(data.data() + 1) = value - address - 5;
             original->patch_address(address, data, LIEF::Binary::VA_TYPES::VA);
-        } else if (type == "SHORT_JUMP") {
+        } else if (type == "SHORT_JMP") {
             int32_t offset = value - address - 2;
 
             if (offset < -128 || offset > 127) {
-                std::cerr << "Invalid SHORT_JUMP offset" << std::endl;
+                std::cerr << "Invalid SHORT_JMP offset" << std::endl;
                 return 1;
             }
 
