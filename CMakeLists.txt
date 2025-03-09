@@ -148,8 +148,13 @@ add_patched(c2_patched
         "_FASTCALL_REGS;unsigned FASTCALL_REGS[];0x10CDB930;ABS"
         "_CALLEE_CLEAN_START;void CALLEE_CLEAN_START(void);0x10C4E81C"
         "_CALLEE_CLEAN_END;void CALLEE_CLEAN_END(void);0x10C4E823"
+        "_SCRATCH_REGS;void SCRATCH_REGS(void);0x10C3A945"
+        "_SCRATCH_REGS_END;void SCRATCH_REGS_END(void);0x10C3A94E"
+        "_TUP_FIND_DST_REG_INTERF;void TUP_FIND_DST_REG_INTERF(void);0x10BF1EB0"
+        "_SCRATCH_REGS_SKIP;void SCRATCH_REGS_SKIP(void);0x10C3A96A"
     PATCHES
         "NEAR_JMP;_START_PTR;usercall_allo_reg"
         "NEAR_JMP;_READ_EXTRA_START_PTR;read_extra"
         "NEAR_JMP;_CALLEE_CLEAN_START;callee_clean"
+        "NEAR_JMP;_SCRATCH_REGS;scratch_regs"
 )

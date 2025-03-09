@@ -145,10 +145,17 @@
 #define WS_EDX 3
 #define WS_ESI 4
 #define WS_EDI 5
+#define WS_ESP 6
+#define WS_EBP 7
 #define WS_USERCALL 255
 #define WS_USERPURGE 254
 #define WS_MUSTUSEEBP 253
+#define WS_SPOILS 252
+
+#define WS_STATE_REGS 0
+#define WS_STATE_SPOILS 1
 
 #define REGS_DATA_FLAG_CALLEECLEAN 1
 #define REGS_DATA_FLAG_MUSTUSEEBP 2
-#define REGS_DATA_MAX_REGS 6
+#define REGS_DATA_FLAG_HASSPOILS 4
+#define REGS_DATA_MAX_REGS 8

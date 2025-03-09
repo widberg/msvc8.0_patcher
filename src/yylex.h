@@ -1,17 +1,3 @@
-typedef struct TOKEN_ {
-    unsigned id;
-    unsigned x;
-    unsigned y;
-    unsigned value;
-    unsigned value2;
-} TOKEN;
-
-typedef struct REGS_DATA_ {
-    unsigned flags;
-    unsigned size;
-    unsigned regs[REGS_DATA_MAX_REGS];
-} REGS_DATA;
-
 static const unsigned char REGS_LOOKUP[] = {
     [WS_EAX] = MS_EAX,
     [WS_EBX] = MS_EBX,
@@ -19,6 +5,8 @@ static const unsigned char REGS_LOOKUP[] = {
     [WS_EDX] = MS_EDX,
     [WS_ESI] = MS_ESI,
     [WS_EDI] = MS_EDI,
+    [WS_ESP] = MS_ESP,
+    [WS_EBP] = MS_EBP,
 };
 
 __declspec(dllexport) TOKEN *wrap_yylex(void) {
@@ -39,11 +27,15 @@ __declspec(dllexport) TOKEN *wrap_yylex(void) {
     TOKEN_INPUT_STACK_GET_TOKEN(&TOKEN_INPUT_STACK);
     REGS_DATA *regs_data = (REGS_DATA*)DoMalloc(sizeof(*regs_data));
 
-    regs_data->flags = 0;
+    for (unsigned i = 0; i < sizeof(*regs_data) / 4; i++) {
+        ((unsigned*)regs_data)[i] = 0;
+    }
+
     if (value == WS_USERCALL) {
         regs_data->flags |= REGS_DATA_FLAG_CALLEECLEAN;
     }
 
+    unsigned state = WS_STATE_REGS;
     unsigned regs_size = 0;
     while (1) {
       TOKEN *peaked_token = TOKEN_INPUT_STACK_PEAK_TOKEN(&TOKEN_INPUT_STACK);
@@ -53,9 +45,16 @@ __declspec(dllexport) TOKEN *wrap_yylex(void) {
       unsigned value = peaked_token->value2;
       if (value == WS_MUSTUSEEBP) {
         regs_data->flags |= REGS_DATA_FLAG_MUSTUSEEBP;
+      } else if (value == WS_SPOILS) {
+        regs_data->flags |= REGS_DATA_FLAG_HASSPOILS;
+        state = WS_STATE_SPOILS;
       } else {
-        regs_data->regs[regs_size] = REGS_LOOKUP[value];
-        regs_size++;
+        if (state == WS_STATE_REGS) {
+            regs_data->regs[regs_size] = REGS_LOOKUP[value];
+            regs_size++;
+        } else {
+            regs_data->spoils |= 1 << REGS_LOOKUP[value];
+        }
       }
       TOKEN_INPUT_STACK_GET_TOKEN(&TOKEN_INPUT_STACK);
       if (regs_size >= REGS_DATA_MAX_REGS) {

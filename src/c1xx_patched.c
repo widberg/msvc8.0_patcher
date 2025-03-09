@@ -9,6 +9,7 @@ __declspec(dllexport, naked) void *real_yylex(void) {
 
 #include "constants.h"
 #define TOK_FASTCALL 225
+#include "structs.h"
 #include "yylex.h"
 
 __declspec(dllexport, naked) void parser_optype(void) {
