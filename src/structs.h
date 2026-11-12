@@ -31,8 +31,22 @@ typedef struct FUNCTION_ {
     FUNCTION_ATTRIBUTES *attributes;
 } FUNCTION;
 
+// c2's sparse bit vector, as LoAddCallScratchRegs reads a callee's used registers
+typedef struct SBV_NODE_ {
+    unsigned base;
+    unsigned bits;
+    struct SBV_NODE_ *next;
+} SBV_NODE;
+
+typedef struct SBV_ {
+    SBV_NODE *first;
+    unsigned pool;
+} SBV;
+
 // One entry of the out of band regs data table, keyed by the function's symbol
 typedef struct REGS_ENTRY_ {
     FUNCTION_ATTRIBUTES *attributes;
     REGS_DATA *regs_data;
+    SBV spoils;
+    SBV_NODE spoils_node;
 } REGS_ENTRY;

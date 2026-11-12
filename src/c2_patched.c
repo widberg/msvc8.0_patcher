@@ -29,6 +29,10 @@ __declspec(dllexport) void __fastcall regs_table_set(FUNCTION_ATTRIBUTES *attrib
     }
     entry->attributes = attributes;
     entry->regs_data = regs_data;
+    entry->spoils.first = &entry->spoils_node;
+    entry->spoils_node.base = 0;
+    entry->spoils_node.bits = regs_data ? regs_data->spoils : 0;
+    entry->spoils_node.next = 0;
 }
 
 __declspec(dllexport) REGS_DATA *__fastcall regs_table_get(FUNCTION_ATTRIBUTES *attributes) {
@@ -41,6 +45,16 @@ __declspec(dllexport) REGS_DATA *__fastcall regs_table_get(FUNCTION_ATTRIBUTES *
         return 0;
     }
     return entry->regs_data;
+}
+
+// The registers a call to this function overwrites, in the form of the used registers c2 records for a
+// function compiled earlier in the same module (MscRecordInterProcRegInfo); 0 without __spoils
+__declspec(dllexport) SBV *__fastcall regs_table_spoils(FUNCTION_ATTRIBUTES *attributes) {
+    REGS_DATA *regs_data = regs_table_get(attributes);
+    if (regs_data == 0 || (regs_data->flags & REGS_DATA_FLAG_HASSPOILS) == 0) {
+        return 0;
+    }
+    return &regs_table_slot(attributes)->spoils;
 }
 
 __declspec(dllexport, naked) void usercall_allo_reg(void) {
@@ -115,23 +129,18 @@ __declspec(dllexport, naked) void callee_clean(void) {
     }
 }
 
+// LoAddCallScratchRegs kills each volatile register the callee's used set contains, or every one when it has
+// none. Give it the spoils list as that set.
 __declspec(dllexport, naked) void scratch_regs(void) {
     __asm {
         mov ecx, DWORD PTR [esp+0x18]
-        call regs_table_get
+        call regs_table_spoils
         test eax, eax
-        jz cont
-        test DWORD PTR [eax+REGS_DATA.flags], REGS_DATA_FLAG_HASSPOILS
-        jz cont
-        mov ecx, esi
-        and ecx, 0x1F
-        mov edx, 1
-        shl edx, cl
-        test edx, DWORD PTR [eax+REGS_DATA.spoils]
-        jz SCRATCH_REGS_SKIP
-    cont:
-        mov eax, DWORD PTR [esp+0x24]
-        call TUP_FIND_DST_REG_INTERF
+        jz no_spoils
+        mov DWORD PTR [esp+0x10], eax
+    no_spoils:
+        mov ebp, DWORD PTR [esp+0x10]
+        mov esi, 1
         jmp SCRATCH_REGS_END
     }
 }
