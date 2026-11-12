@@ -1,6 +1,48 @@
 #include "constants.h"
 #include "structs.h"
 
+// The regs data of every __usercall/__userpurge function, keyed by the function's symbol. It used to live in
+// FUNCTION_ATTRIBUTES+0x10, which is the symbol's link to its back-end symbol: SymMakeUserVar only makes a
+// back-end symbol when that field is zero and SymTerm/SymReset write it.
+#pragma section(".widberg.data", read, write)
+__declspec(allocate(".widberg.data")) REGS_ENTRY regs_table[REGS_TABLE_SIZE];
+
+static REGS_ENTRY *regs_table_slot(FUNCTION_ATTRIBUTES *attributes) {
+    unsigned i = ((unsigned)attributes >> 3) & (REGS_TABLE_SIZE - 1);
+    unsigned n;
+    for (n = 0; n < REGS_TABLE_SIZE; n++) {
+        REGS_ENTRY *entry = &regs_table[i];
+        if (entry->attributes == attributes || entry->attributes == 0) {
+            return entry;
+        }
+        i = (i + 1) & (REGS_TABLE_SIZE - 1);
+    }
+    return 0;
+}
+
+// Called for every fastcall function symbol read from the IL, so an entry left by a freed symbol at the same
+// address is overwritten
+__declspec(dllexport) void __fastcall regs_table_set(FUNCTION_ATTRIBUTES *attributes, REGS_DATA *regs_data) {
+    REGS_ENTRY *entry = regs_table_slot(attributes);
+    if (entry == 0 || (entry->attributes == 0 && regs_data == 0)) {
+        return;
+    }
+    entry->attributes = attributes;
+    entry->regs_data = regs_data;
+}
+
+__declspec(dllexport) REGS_DATA *__fastcall regs_table_get(FUNCTION_ATTRIBUTES *attributes) {
+    REGS_ENTRY *entry;
+    if (attributes == 0 || (attributes->cc_and_other_bits & IL_CC_MASK) != IL_CC_FASTCALL) {
+        return 0;
+    }
+    entry = regs_table_slot(attributes);
+    if (entry == 0 || entry->attributes != attributes) {
+        return 0;
+    }
+    return entry->regs_data;
+}
+
 __declspec(dllexport, naked) void usercall_allo_reg(void) {
     __asm {
         mov ecx, DWORD PTR [esp+0x18]
@@ -11,11 +53,14 @@ __declspec(dllexport, naked) void usercall_allo_reg(void) {
     fn_zero:
         mov ecx, DWORD PTR [esp+0x24]
         mov ecx, DWORD PTR [ecx+0x28]
+        cmp BYTE PTR [ecx+0x8], 4
+        jne no_usercall
         mov ecx, DWORD PTR [ecx+0x18]
     do_stuff:
-        mov eax, DWORD PTR [ecx+FUNCTION_ATTRIBUTES.regs_data]
+        call regs_table_get
         test eax, eax
         jne handle_usercall
+    no_usercall:
         mov edx, OFFSET FASTCALL_REGS
         mov edi, 2
         jmp END_PTR
@@ -28,12 +73,18 @@ __declspec(dllexport, naked) void usercall_allo_reg(void) {
 
 __declspec(dllexport, naked) void read_extra(void) {
     __asm {
-        mov eax, DWORD PTR [esi+0x20]
-        and eax, 0x1C
-        cmp eax, 4
+        mov eax, DWORD PTR [esi+FUNCTION_ATTRIBUTES.cc_and_other_bits]
+        and eax, IL_CC_MASK
+        cmp eax, IL_CC_FASTCALL
         jne skip
+        push ecx
+        push edx
         call LOREAD
-        mov DWORD PTR [esi+FUNCTION_ATTRIBUTES.regs_data], eax
+        mov edx, eax
+        mov ecx, esi
+        call regs_table_set
+        pop edx
+        pop ecx
     skip:
         cmp LONG_TYPE_INDEX, 0
         jmp READ_EXTRA_END
@@ -42,11 +93,15 @@ __declspec(dllexport, naked) void read_extra(void) {
 
 __declspec(dllexport, naked) void callee_clean(void) {
     __asm {
-        mov edi, DWORD PTR [eax+FUNCTION_ATTRIBUTES.cc_and_other_bits]
-        and edi, 0x1C
-        cmp edi, 4
-        jne callee_clean_skip
-        mov edi, DWORD PTR [eax+FUNCTION_ATTRIBUTES.regs_data]
+        push eax
+        push ecx
+        push edx
+        mov ecx, eax
+        call regs_table_get
+        mov edi, eax
+        pop edx
+        pop ecx
+        pop eax
         test edi, edi
         jz callee_clean_skip
         mov edi, DWORD PTR [edi+REGS_DATA.flags]
@@ -62,22 +117,17 @@ __declspec(dllexport, naked) void callee_clean(void) {
 
 __declspec(dllexport, naked) void scratch_regs(void) {
     __asm {
+        mov ecx, DWORD PTR [esp+0x18]
+        call regs_table_get
+        test eax, eax
+        jz cont
+        test DWORD PTR [eax+REGS_DATA.flags], REGS_DATA_FLAG_HASSPOILS
+        jz cont
         mov ecx, esi
         and ecx, 0x1F
         mov edx, 1
         shl edx, cl
-        mov ecx, DWORD PTR [esp+0x24]
-        mov ecx, DWORD PTR [ecx+0x28]
-        mov ecx, DWORD PTR [ecx+0x18]
-        test ecx, ecx
-        jz cont
-        mov ecx, DWORD PTR [ecx+FUNCTION_ATTRIBUTES.regs_data]
-        test ecx, ecx
-        jz cont
-        test DWORD PTR [ecx+REGS_DATA.flags], REGS_DATA_FLAG_HASSPOILS
-        jz cont
-        mov ecx, DWORD PTR [ecx+REGS_DATA.spoils]
-        test edx, ecx
+        test edx, DWORD PTR [eax+REGS_DATA.spoils]
         jz SCRATCH_REGS_SKIP
     cont:
         mov eax, DWORD PTR [esp+0x24]
