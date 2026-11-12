@@ -162,3 +162,12 @@
 
 // Power of two
 #define REGS_TABLE_SIZE 0x4000
+
+#define TUPLE_FLAG_INSTRUCTION 1
+#define OP_MOV 0x1
+#define OP_ASM 0x2C5
+#define OP_SIDEEFFECT 0x2D0
+#define TUPLE_KIND_REG 1
+#define SYM_KIND_REG 1
+#define REG_ATTRIB_CALLEE_SAVED_MASK 3
+#define REG_ATTRIB_CALLEE_SAVED 1

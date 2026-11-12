@@ -144,3 +144,88 @@ __declspec(dllexport, naked) void scratch_regs(void) {
         jmp SCRATCH_REGS_END
     }
 }
+
+static unsigned operand_reg(TUPLE *operand) {
+    SYM *reg;
+    if (operand == 0 || operand->kind != TUPLE_KIND_REG) {
+        return MS_NOREG;
+    }
+    reg = operand->reg;
+    if (reg == 0 || (reg->kind_and_flags & 0xFF) != SYM_KIND_REG) {
+        reg = (SYM *)operand->sym;
+    }
+    if (reg == 0 || (reg->kind_and_flags & 0xFF) != SYM_KIND_REG) {
+        return MS_NOREG;
+    }
+    return reg->base->base->key;
+}
+
+// Whether an instruction other than the parameter's own definition at the entry (an OPSIDEEFFECT) or a copy of
+// the register to itself writes the register. Inline asm counts as writing every register: its writes are not
+// destinations.
+static int function_writes_reg(FUNCTION *function, unsigned reg) {
+    TUPLE *tuple;
+    TUPLE *dst;
+    int entry_def = 0;
+    for (tuple = function->flow_graph->entry->tuples; tuple != 0; tuple = tuple->next) {
+        if ((tuple->flags & TUPLE_FLAG_INSTRUCTION) == 0) {
+            continue;
+        }
+        if (tuple->opcode == OP_ASM) {
+            return 1;
+        }
+        for (dst = tuple->dsts; dst != 0; dst = dst->next) {
+            if (operand_reg(dst) != reg) {
+                continue;
+            }
+            if (tuple->opcode == OP_SIDEEFFECT && !entry_def) {
+                entry_def = 1;
+                continue;
+            }
+            if (tuple->opcode == OP_MOV && operand_reg(tuple->srcs) == reg && tuple->srcs->next == 0) {
+                continue;
+            }
+            return 1;
+        }
+    }
+    return 0;
+}
+
+// A callee-saved register a __usercall function receives a parameter in is marked used, so the prologue saves
+// it. MdmFlexParams, which runs after register allocation and before the prologue is made, clears the mark for
+// a flex param's register when no instruction but the deleted load writes it (MdmAllocateFlexParam). Do the same
+// for the declared registers: a register no instruction writes is not saved.
+__declspec(dllexport) void __fastcall usercall_callee_saves(FUNCTION *function) {
+    REGS_DATA *regs_data = regs_table_get(function->attributes);
+    unsigned i;
+    if (regs_data == 0) {
+        return;
+    }
+    for (i = 0; i < regs_data->size; i++) {
+        unsigned reg = regs_data->regs[i];
+        if (reg < MS_EAX || reg > MS_EDI) {
+            continue;
+        }
+        if ((REG_ATTRIB[reg] & REG_ATTRIB_CALLEE_SAVED_MASK) != REG_ATTRIB_CALLEE_SAVED || REG_USED[reg] == 0) {
+            continue;
+        }
+        if (!function_writes_reg(function, reg)) {
+            REG_USED[reg] = 0;
+        }
+    }
+}
+
+__declspec(dllexport, naked) void usercall_flex_params(void) {
+    __asm {
+        push ecx
+        push edx
+        mov ecx, DWORD PTR [esp+0xC]
+        call usercall_callee_saves
+        pop edx
+        pop ecx
+        sub esp, 0x30
+        push ebx
+        push ebp
+        jmp FLEX_PARAMS_RESUME
+    }
+}

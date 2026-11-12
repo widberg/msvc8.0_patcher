@@ -150,9 +150,14 @@ add_patched(c2_patched
         "_CALLEE_CLEAN_END;void CALLEE_CLEAN_END(void);0x10C4E823"
         "_SCRATCH_REGS;void SCRATCH_REGS(void);0x10C3A8F5"
         "_SCRATCH_REGS_END;void SCRATCH_REGS_END(void);0x10C3A8FE"
+        "_FLEX_PARAMS;void FLEX_PARAMS(void);0x10C54090"
+        "_FLEX_PARAMS_RESUME;void FLEX_PARAMS_RESUME(void);0x10C54095"
+        "_REG_ATTRIB;unsigned REG_ATTRIB[];0x10CE5598;ABS"
+        "_REG_USED;unsigned REG_USED[];0x10D38A00;ABS"
     PATCHES
         "NEAR_JMP;_START_PTR;usercall_allo_reg"
         "NEAR_JMP;_READ_EXTRA_START_PTR;read_extra"
         "NEAR_JMP;_CALLEE_CLEAN_START;callee_clean"
         "NEAR_JMP;_SCRATCH_REGS;scratch_regs"
+        "NEAR_JMP;_FLEX_PARAMS;usercall_flex_params"
 )

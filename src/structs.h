@@ -26,9 +26,50 @@ typedef struct FUNCTION_ATTRIBUTES_ {
     unsigned cc_and_other_bits;
 } FUNCTION_ATTRIBUTES;
 
+// c2's back-end symbol (SYM); for a physical register, key is the register number
+typedef struct SYM_ {
+    void *ssr;
+    unsigned kind_and_flags;
+    struct SYM_ *base;
+    unsigned a;
+    unsigned b;
+    unsigned c;
+    unsigned d;
+    unsigned key;
+} SYM;
+
+// c2's tuple: an instruction, or one of its operands
+typedef struct TUPLE_ {
+    struct TUPLE_ *next;
+    unsigned opcode;
+    unsigned char kind;
+    unsigned char flags;
+    unsigned short type;
+    unsigned a;
+    unsigned b;
+    unsigned c;
+    void *sym;
+    SYM *reg;
+    unsigned d;
+    unsigned e;
+    struct TUPLE_ *srcs;
+    struct TUPLE_ *dsts;
+} TUPLE;
+
+typedef struct BLOCK_ {
+    unsigned a[7];
+    TUPLE *tuples;
+} BLOCK;
+
+typedef struct FLOW_GRAPH_ {
+    BLOCK *entry;
+} FLOW_GRAPH;
+
 // c2's per-function state (FUNC)
 typedef struct FUNCTION_ {
     FUNCTION_ATTRIBUTES *attributes;
+    unsigned a;
+    FLOW_GRAPH *flow_graph;
 } FUNCTION;
 
 // c2's sparse bit vector, as LoAddCallScratchRegs reads a callee's used registers
