@@ -34,21 +34,14 @@ Clone the repository and submodules. Use a modern Visual Studio and Ninja to bui
 
 Ordered by priority.
 
-* For some reason reg args are treated as "used" aka overwritten even if they aren't
-  - Only the regs not in the clobber list
-  - This is really annoying because it makes it impossible to match functions using regs other than eax, ecx, and edx for args
-  - Actual flex params are not treated as used, try to copy what those do if I can figure that out
-* figure out if we need spoils/preseved regs
-  - Probably need preserved
-  - The compiler will save off eax before a call to a function that doesn't modify it but in the game it doesn't
-  - likely the ltcg optimizer can be more restrictive with the spoils list
-  - this might solve the ebp problem too?
 * Figure out if we need a way to force using base pointer as reg
   - Sometimes the compiler uses another reg when it should be using ebp
   - Even with /Oy- it still uses another reg
   - This could be due to not matching instructions elsewhere in the functions due to the previous todo
-* Store the regs data out of band
-  - We're stepping on memory used by the compiler putting the pointer where we are
+  - Not reproduced yet; may have been one of the fixed register arg saves or x87/xmm spoils
+* Register data for calls through function pointers
+  - The regs data is attached to the function's symbol, so a call through a pointer uses the plain fastcall registers
+* Debug info with a __usercall/__userpurge member function call ICEs (/Zi, /Z7)
 * force inline/no inline per call
   - Likely unnecessary
   - Not sure if LTCG would cause anything to be inlined that wouldn't be otherwise if available
